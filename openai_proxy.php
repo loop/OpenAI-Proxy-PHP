@@ -86,30 +86,43 @@
     
     }
 
-    //parses single message with image_data
-    function add_message_image_data($role,$data) {
-
+    // parses single message with image_data
+    function add_message_image_data($role, $data) {
         global $script_location;
-
+    
         $data = urldecode($data);
         $hash = md5($data);
-
-        //save the tmp folder
-        @mkdir("tmp"); //create temp folder
-        @chmod("tmp", 0777); //setup permission of folder
-        $f = @fopen("tmp/{$hash}.jpg","w"); //open tmp filename
-        @fwrite($f, $data); //write data
-        @fclose($f); //close connection
-
+    
+        // Ensure the tmp folder exists and is writable
+        if (!is_dir("tmp")) {
+            mkdir("tmp", 0777, true);
+        }
+    
+        // Open the file after ensuring the directory exists
+        $f = fopen("tmp/{$hash}.jpg", "w");
+        if (!$f) {
+            error_log("Failed to open file for writing in tmp directory.");
+            return false; // Handle the error appropriately if needed
+        }
+    
+        fwrite($f, $data);
+        fclose($f);
+    
+        // Create message object
         $item = new stdClass();
         $item->role = $role;
-
+    
+        // Initialize the image_url object before setting its property
         $content = new stdClass();
         $content->type = "image_url";
+        $content->image_url = new stdClass();  // Initialize image_url as an object
         $content->image_url->url = "$script_location/tmp/{$hash}.jpg";
-
+    
+        // Print out the generated URL for debugging purposes
+        echo "Generated image URL: " . $content->image_url->url . "<br>";
+    
         $item->content[] = $content;
-
+    
         return $item;
     }
     
